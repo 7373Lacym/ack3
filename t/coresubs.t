@@ -14,7 +14,7 @@ prep_environment();
 
 my $ack_pm = reslash( 'blib/lib/App/Ack.pm' );
 
-for my $word qw( warn die ) {
+for my $word ( qw( warn die ) ) {
     subtest "Finding $word" => sub {
         plan tests => 4;
 
@@ -25,6 +25,6 @@ for my $word qw( warn die ) {
         like( $results[1], qr/^$ack_pm:\d+:sub $word/, 'sub' );
         is( scalar @results, 2, 'Exactly two hits' );
     };
-};
+}
 
 exit 0;

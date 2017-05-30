@@ -183,9 +183,6 @@ sub _options_block {
 --type-add=cmake:is:CMakeLists.txt
 --type-add=cmake:ext:cmake
 
-# Actionscript
---type-add=actionscript:ext:as,mxml
-
 # Ada
 # http://www.adaic.org/
 --type-add=ada:ext:ada,adb,ads
@@ -311,10 +308,16 @@ sub _options_block {
 --type-add=lua:ext:lua
 --type-add=lua:firstlinematch:/^#!.*\blua(jit)?/
 
+# Markdown
+# https://en.wikipedia.org/wiki/Markdown
+--type-add=markdown:ext:md,markdown
+# We understand that there are many ad hoc extensions for markdown
+# that people use.  .md and .markdown are the two that ack recognizes.
+# You are free to add your own in your ackrc file.
+
 # Matlab
 # http://en.wikipedia.org/wiki/MATLAB
 --type-add=matlab:ext:m
-
 
 # Objective-C
 --type-add=objc:ext:m,h

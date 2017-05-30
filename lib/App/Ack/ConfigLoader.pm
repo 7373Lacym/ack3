@@ -262,7 +262,7 @@ sub get_arg_spec {
     * Your new option is explained when a user invokes ack --man.
       (See the POD at the end of ./ack)
     * Add your option to t/config-loader.t
-    * Add your option to t/Util.pm#get_options
+    * Add your option to t/Util.pm#get_expected_options
     * Add your option's description and aliases to dev/generate-completion-scripts.pl
     * Go through the list of options already available, and consider
       whether your new option can be considered mutually exclusive
@@ -315,17 +315,17 @@ sub get_arg_spec {
         'I'                 => sub { $opt->{i} = 0; $opt->{smart_case} = 0; },
         'ignore-directory|ignore-dir=s' => _generate_ignore_dir('--ignore-dir', $opt),
         'ignore-file=s'     => sub {
-                                    my ( undef, $file ) = @_;
+            my ( undef, $file ) = @_;
 
-                                    my ( $filter_type, $args ) = split /:/, $file, 2;
+            my ( $filter_type, $args ) = split /:/, $file, 2;
 
-                                    my $filter = App::Ack::Filter->create_filter($filter_type, split(/,/, $args));
+            my $filter = App::Ack::Filter->create_filter($filter_type, split(/,/, $args));
 
-                                    if ( !$opt->{ifiles} ) {
-                                        $opt->{ifiles} = App::Ack::Filter::Collection->new();
-                                    }
-                                    $opt->{ifiles}->add($filter);
-                               },
+            if ( !$opt->{ifiles} ) {
+                $opt->{ifiles} = App::Ack::Filter::Collection->new();
+            }
+            $opt->{ifiles}->add($filter);
+        },
         'lines=s'           => sub { shift; my $val = shift; push @{$opt->{lines}}, $val },
         'l|files-with-matches'
                             => \$opt->{l},
@@ -348,7 +348,7 @@ sub get_arg_spec {
         'proximate:1'       => \$opt->{proximate},
         'Q|literal'         => \$opt->{Q},
         'r|R|recurse'       => sub { $opt->{n} = 0 },
-        's'                 => \$opt->{dont_report_bad_filenames},
+        's'                 => \$opt->{s},
         'show-types'        => \$opt->{show_types},
         'smart-case!'       => sub { my (undef,$value) = @_; $opt->{smart_case} = $value; $opt->{i} = 0 if $value; },
         'sort-files'        => \$opt->{sort_files},

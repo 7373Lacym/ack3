@@ -107,16 +107,6 @@ sub _my_program {
 }
 
 
-=head2 filetypes_supported()
-
-Returns a list of all the types that we can detect.
-
-=cut
-
-sub filetypes_supported {
-    return keys %mappings;
-}
-
 sub thpppt {
     my $y = q{_   /|,\\'!.x',=(www)=,   U   };
     $y =~ tr/,x!w/\nOo_/;
@@ -342,7 +332,7 @@ File finding:
 File inclusion/exclusion:
   --[no]ignore-dir=name         Add/remove directory from list of ignored dirs
   --[no]ignore-directory=name   Synonym for ignore-dir
-  --ignore-file=filter          Add filter for ignoring files
+  --ignore-file=FILTER:ARGS     Add filter for ignoring files.
   -r, -R, --recurse             Recurse into subdirectories (default: on)
   -n, --no-recurse              No descending into subdirectories
   --[no]follow                  Follow symlinks.  Default is off.
@@ -354,16 +344,12 @@ File inclusion/exclusion:
                                 See "ack --help-types" for supported filetypes.
 
 File type specification:
-  --type-set TYPE:FILTER:FILTERARGS
-                                Files with the given FILTERARGS applied to the
-                                given FILTER are recognized as being of type
-                                TYPE. This replaces an existing definition for
-                                type TYPE.
-  --type-add TYPE:FILTER:FILTERARGS
-                                Files with the given FILTERARGS applied to the
-                                given FILTER are recognized as being type TYPE.
-  --type-del TYPE               Removes all filters associated with TYPE.
-
+  --type-set=TYPE:FILTER:ARGS   Files with the given ARGS applied to the given
+                                FILTER are recognized as being of type TYPE.
+                                This replaces an existing definition for TYPE.
+  --type-add=TYPE:FILTER:ARGS   Files with the given ARGS applied to the given
+                                FILTER are recognized as being type TYPE.
+  --type-del=TYPE               Removes all filters associated with TYPE.
 
 Miscellaneous:
   --version                     Display version & copyright
@@ -385,6 +371,15 @@ Miscellaneous:
   --thpppt                      Bill the Cat
   --bar                         The warning admiral
   --cathy                       Chocolate! Chocolate! Chocolate!
+
+Filter specifications:
+    If FILTER is "ext", ARGS is a list of extensions checked against the
+        file's extension.
+    If FILTER is "is", ARGS must match the file's name exactly.
+    If FILTER is "match", ARGS is matched as a case-insensitive regex
+        against the filename.
+    If FILTER is "firstlinematch", ARGS is matched as a regex the first
+        line of the file's contents.
 
 Exit status is 0 if match, 1 if no match.
 
@@ -418,7 +413,7 @@ Note that some extensions may appear in multiple types.  For example,
 
 END_OF_HELP
 
-    my @types = filetypes_supported();
+    my @types = keys %App::Ack::mappings;
     my $maxlen = 0;
     for ( @types ) {
         $maxlen = length if $maxlen < length;
@@ -446,7 +441,6 @@ sub show_docs {
         # Right now we just show all POD for the standalone.
         Pod::Usage::pod2usage({
             -input     => $App::Ack::ORIGINAL_PROGRAM_NAME,
-            -noperldoc => 1,
             -verbose   => 2,
             -exitval   => 0,
         });
@@ -457,7 +451,6 @@ sub show_docs {
 
         Pod::Usage::pod2usage({
             -input     => $INC{ "App/Ack/Docs/$section.pm" },
-            -noperldoc => 1,
             -verbose   => 2,
             -exitval   => 0,
         });
@@ -495,18 +488,6 @@ $copyright
 This program is free software.  You may modify or distribute it
 under the terms of the Artistic License v2.0.
 END_OF_VERSION
-}
-
-=head2 print_version_statement
-
-Prints the version information for ack.
-
-=cut
-
-sub print_version_statement {
-    App::Ack::print( get_version_statement() );
-
-    return;
 }
 
 
@@ -570,28 +551,6 @@ sub show_types {
     App::Ack::print( $file->name, $arrow, join( ',', @types ), $ors );
 
     return;
-}
-
-
-=head2 load_colors()
-
-Sets up colors for ack, if the proper modules load.
-
-=cut
-
-sub load_colors {
-    my $rc = eval 'use Term::ANSIColor 1.10 (); 1;';
-    if ( $rc && $App::Ack::is_windows ) {
-        $rc = eval 'use Win32::Console::ANSI; 1;';
-    }
-
-    if ( $rc ) {
-        $ENV{ACK_COLOR_MATCH}    ||= 'black on_yellow';
-        $ENV{ACK_COLOR_FILENAME} ||= 'bold green';
-        $ENV{ACK_COLOR_LINENO}   ||= 'bold yellow';
-    }
-
-    return $rc;
 }
 
 

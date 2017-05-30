@@ -15,6 +15,10 @@ word matching.
 
 * `--proximate=N` option
 
+* Added `--pod` and `--markdown`.
+
+* Removed `--actionscript`.
+
 # Bug fixes
 
 * Column numbers were not getting colorized in the output.  Added
