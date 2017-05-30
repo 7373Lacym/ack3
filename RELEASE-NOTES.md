@@ -17,8 +17,6 @@ word matching.
 
 * Added `--pod` and `--markdown`.
 
-* Removed `--actionscript`.
-
 # Bug fixes
 
 * Column numbers were not getting colorized in the output.  Added
@@ -40,6 +38,5 @@ ack 2 would highlight your capture groups.  For example,
 would highlight the `set` or `get`, and the `name` or `id`, but not the
 full `set_user_id` that was matched.
 
-This feature was too confusing and has been removed.
-
-## Removed unused filetypes
+This feature was too confusing and has been removed.  Now, the entire
+matching string is highlighted.
