@@ -1,3 +1,9 @@
+# Build status of dev branch
+
+* Linux [![Build Status](https://travis-ci.org/petdance/ack3.png?branch=dev)](https://travis-ci.org/petdance/ack3)
+* Windows [![Build Status](https://ci.appveyor.com/api/projects/status/github/petdance/ack3)](https://ci.appveyor.com/project/petdance/ack3)
+<!-- * [CPAN Testers](http://cpantesters.org/distro/A/ack.html) -->
+
 # ack 3
 
 ack is a code-searching tool, similar to grep but optimized for
@@ -26,10 +32,6 @@ ack requires Perl 5.10.1 or higher.  Perl 5.10.1 was released August 2009.
     # - or -
     make ack-standalone
     cp ack-standalone ~/bin/ack3 # For a personal installation
-
-Build status: [![Build Status](https://travis-ci.org/petdance/ack3.png?branch=dev)](https://travis-ci.org/petdance/ack3)
-
-[CPAN Testers](http://cpantesters.org/distro/A/ack.html)
 
 # Development
 
