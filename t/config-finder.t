@@ -26,7 +26,7 @@ if ( $tmpdir && ($tmpdir =~ /^\Q$home/) ) {
     exit;
 }
 
-plan tests => 19;
+plan tests => 13;
 
 # Set HOME to a known value, so we get predictable results.
 local $ENV{HOME} = realpath('t/home');
@@ -152,33 +152,42 @@ subtest 'A project file in the same directory should be detected, even with anot
     no_home(   sub { expect_ackrcs( [ @global_files, { project => 1, path => $currdir_ackrc } ] ) } );
 
     _unlink( $project_file );
-    touch_ackrc( '.ackrc' );
 };
 
 
-my $ok = eval { $finder->find_config_files };
-my $err = $@;
-ok( !$ok, '.ackrc + _ackrc is error' );
-like( $err, qr/contains both \.ackrc and _ackrc/, 'Got the expected error' );
+touch_ackrc( '.ackrc' );
 
-no_home( sub {
-    $ok = eval { $finder->find_config_files };
-    $err = $@;
-    ok( !$ok, '.ackrc + _ackrc is error' );
-    like( $err, qr/contains both \.ackrc and _ackrc/, 'Got the expected error' );
-} );
+subtest '.ackrc + _ackrc is an error' => sub {
+    plan tests => 4;
+
+    my $sub = sub {
+        my $ok = eval { $finder->find_config_files };
+        my $err = $@;
+        ok( !$ok, '.ackrc + _ackrc is error' );
+        like( $err, qr/\Qcontains both .ackrc and _ackrc/, 'Got the expected error' );
+    };
+    with_home( $sub );
+    no_home(   $sub );
+};
+
 
 _unlink( '.ackrc' );
-$project_file = File::Spec->catfile($tempdir->dirname, 'foo', '.ackrc');
-touch_ackrc( $project_file );
-expect_ackrcs( [ @std_files, { project => 1, path => File::Spec->rel2abs('_ackrc') }], 'a lower-level _ackrc should be preferred to a higher-level .ackrc' );
-no_home( sub {
-    expect_ackrcs( [ @global_files, { project => 1, path => File::Spec->rel2abs('_ackrc') } ], 'a lower-level _ackrc should be preferred to a higher-level .ackrc' );
-} );
+subtest 'A lower-level _ackrc should be preferred to a higher-level .ackrc' => sub {
+    plan tests => 2;
 
-_unlink( '_ackrc' );
+    my $project_file = File::Spec->catfile($tempdir->dirname, 'foo', '.ackrc');
+    touch_ackrc( $project_file );
+    my $currdir_ackrc = File::Spec->rel2abs( '_ackrc' );
+    with_home( sub { expect_ackrcs( [ @std_files,    { project => 1, path => $currdir_ackrc } ] ) } );
+    no_home(   sub { expect_ackrcs( [ @global_files, { project => 1, path => $currdir_ackrc } ] ) } );
 
-do {
+    _unlink( '_ackrc' );
+};
+
+
+subtest 'Do not load the same ackrc file twice' => sub {
+    plan tests => 1;
+
     local $ENV{'HOME'} = File::Spec->catdir($tempdir->dirname, 'foo');
 
     my $user_file = File::Spec->catfile($tempdir->dirname, 'foo', '.ackrc');
@@ -188,7 +197,10 @@ do {
     _unlink( $user_file );
 };
 
-do {
+
+subtest 'Hierarchical testing' => sub {
+    plan tests => 3;
+
     _chdir( $tempdir->dirname );
     local $ENV{'HOME'} = File::Spec->catfile($tempdir->dirname, 'foo');
 
