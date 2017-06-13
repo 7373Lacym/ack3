@@ -26,7 +26,7 @@ if ( $tmpdir && ($tmpdir =~ /^\Q$home/) ) {
     exit;
 }
 
-plan tests => 26;
+plan tests => 25;
 
 # Set HOME to a known value, so we get predictable results.
 local $ENV{HOME} = realpath('t/home');
@@ -59,7 +59,7 @@ my @std_files = (@global_files, { path => File::Spec->catfile($ENV{'HOME'}, '.ac
 
 my $wd      = getcwd_clean();
 my $tempdir = File::Temp->newdir;
-chdir $tempdir->dirname;
+_chdir( $tempdir->dirname );
 
 $finder = App::Ack::ConfigFinder->new;
 expect_ackrcs( \@std_files, 'having no project file should return only the top level files' );
@@ -68,19 +68,22 @@ no_home( sub {
     expect_ackrcs( \@global_files, 'only system-wide ackrc is returned if HOME is not defined with no project files' );
 } );
 
-mkdir 'foo';
-mkdir File::Spec->catdir('foo', 'bar');
-mkdir File::Spec->catdir('foo', 'bar', 'baz');
+_mkdir( 'foo' );
+_mkdir( File::Spec->catdir('foo', 'bar') );
+_mkdir( File::Spec->catdir('foo', 'bar', 'baz') );
+_chdir( File::Spec->catdir('foo', 'bar', 'baz') );
 
-chdir File::Spec->catdir('foo', 'bar', 'baz');
+subtest 'A project file in the same directory should be detected' => sub {
+    plan tests => 2;
 
-touch_ackrc( '.ackrc' );
-expect_ackrcs( [ @std_files, { project => 1, path => File::Spec->rel2abs('.ackrc') }], 'a project file in the same directory should be detected' );
-no_home( sub {
-    expect_ackrcs( [ @global_files, { project => 1, path => File::Spec->rel2abs('.ackrc') } ], 'a project file in the same directory should be detected' );
-} );
+    touch_ackrc( '.ackrc' );
 
-unlink '.ackrc';
+    my $path = File::Spec->rel2abs( '.ackrc' );
+    with_home( sub { expect_ackrcs( [ @std_files,    { project => 1, path => $path } ] ) } );
+    no_home(   sub { expect_ackrcs( [ @global_files, { project => 1, path => $path } ] ) } );
+
+    _unlink( '.ackrc' );
+};
 
 my $project_file = File::Spec->catfile($tempdir->dirname, 'foo', 'bar', '.ackrc');
 touch_ackrc( $project_file );
@@ -88,7 +91,7 @@ expect_ackrcs( [ @std_files, { project => 1, path => $project_file } ], 'a proje
 no_home( sub {
     expect_ackrcs( [ @global_files, { project => 1, path => $project_file } ], 'a project file in the parent directory should be detected' );
 } );
-unlink $project_file;
+_unlink( $project_file );
 
 $project_file = File::Spec->catfile($tempdir->dirname, 'foo', '.ackrc');
 touch_ackrc( $project_file );
@@ -104,8 +107,8 @@ no_home( sub {
     expect_ackrcs( [ @global_files, { project => 1, path => File::Spec->rel2abs('.ackrc') } ], 'a project file in the same directory should be detected, even with another one above it' );
 } );
 
-unlink '.ackrc';
-unlink $project_file;
+_unlink( '.ackrc' );
+_unlink( $project_file );
 
 touch_ackrc( '_ackrc' );
 expect_ackrcs( [ @std_files, { project => 1, path => File::Spec->rel2abs('_ackrc') } ], 'a project file in the same directory should be detected' );
@@ -113,7 +116,7 @@ no_home( sub {
     expect_ackrcs( [ @global_files, { project => 1, path => File::Spec->rel2abs('_ackrc') } ], 'a project file in the same directory should be detected' );
 } );
 
-unlink '_ackrc';
+_unlink( '_ackrc' );
 
 $project_file = File::Spec->catfile($tempdir->dirname, 'foo', '_ackrc');
 touch_ackrc( $project_file );
@@ -128,7 +131,7 @@ no_home( sub {
     expect_ackrcs( [ @global_files, { project => 1, path => File::Spec->rel2abs('_ackrc') } ], 'a project file in the same directory should be detected, even with another one above it' );
 } );
 
-unlink $project_file;
+_unlink( $project_file );
 touch_ackrc( '.ackrc' );
 my $ok = eval { $finder->find_config_files };
 my $err = $@;
@@ -142,7 +145,7 @@ no_home( sub {
     like( $err, qr/contains both \.ackrc and _ackrc/, 'Got the expected error' );
 } );
 
-unlink '.ackrc';
+_unlink( '.ackrc' );
 $project_file = File::Spec->catfile($tempdir->dirname, 'foo', '.ackrc');
 touch_ackrc( $project_file );
 expect_ackrcs( [ @std_files, { project => 1, path => File::Spec->rel2abs('_ackrc') }], 'a lower-level _ackrc should be preferred to a higher-level .ackrc' );
@@ -150,7 +153,7 @@ no_home( sub {
     expect_ackrcs( [ @global_files, { project => 1, path => File::Spec->rel2abs('_ackrc') } ], 'a lower-level _ackrc should be preferred to a higher-level .ackrc' );
 } );
 
-unlink '_ackrc';
+_unlink( '_ackrc' );
 
 do {
     local $ENV{'HOME'} = File::Spec->catdir($tempdir->dirname, 'foo');
@@ -159,11 +162,11 @@ do {
     touch_ackrc( $user_file );
 
     expect_ackrcs( [ @global_files, { path => $user_file } ], q{Don't load the same ackrc file twice} );
-    unlink($user_file);
+    _unlink( $user_file );
 };
 
 do {
-    chdir $tempdir->dirname;
+    _chdir( $tempdir->dirname );
     local $ENV{'HOME'} = File::Spec->catfile($tempdir->dirname, 'foo');
 
     my $user_file = File::Spec->catfile($ENV{'HOME'}, '.ackrc');
@@ -173,17 +176,17 @@ do {
     local $ENV{'ACKRC'} = $ackrc->filename;
 
     expect_ackrcs( [ @global_files, { path => $ackrc->filename } ], q{ACKRC overrides user's HOME ackrc} );
-    unlink $ackrc->filename;
+    _unlink( $ackrc->filename );
 
     expect_ackrcs( [ @global_files, { path => $user_file } ], q{ACKRC doesn't override if it doesn't exist} );
 
     touch_ackrc( $ackrc->filename );
-    chdir 'foo';
+    _chdir( 'foo' );
     expect_ackrcs( [ @global_files, { path => $ackrc->filename}, { project => 1, path => $user_file } ], q{~/.ackrc should still be found as a project ackrc} );
-    unlink $ackrc->filename;
+    _unlink( $ackrc->filename );
 };
 
-chdir $wd;
+_chdir( $wd );
 clean_up_globals();
 
 exit 0;
@@ -205,6 +208,15 @@ sub no_home {
     my $home_saved = delete $ENV{HOME};
     $fn->();
     $ENV{HOME} = $home_saved;
+
+    return;
+}
+
+# For parity with no_home
+sub with_home {
+    my ( $fn ) = @_;
+
+    $fn->();
 
     return;
 }
@@ -255,4 +267,31 @@ sub clean_up_globals {
     return;
 }
 
+}
+
+
+sub _chdir {
+    my $dir = shift;
+
+    chdir $dir or die "Can't chdir to $dir: $!";
+
+    return;
+}
+
+
+sub _mkdir {
+    my $dir = shift;
+
+    mkdir $dir or die "Can't create $dir: $!";
+
+    return;
+}
+
+
+sub _unlink {
+    my $dir = shift;
+
+    unlink $dir or die "Can't unlink $dir: $!";
+
+    return;
 }
