@@ -31,7 +31,7 @@ plan tests => 13;
 # Set HOME to a known value, so we get predictable results.
 local $ENV{HOME} = realpath('t/home');
 
-# Clear the user's ACKRC so it doesn't throw out expect_ackrcs().
+# Clear the user's ACKRC so it doesn't throw off expect_ackrcs().
 delete $ENV{'ACKRC'};
 
 my $finder;
@@ -74,8 +74,9 @@ _mkdir( File::Spec->catdir('foo', 'bar', 'baz') );
 _chdir( File::Spec->catdir('foo', 'bar', 'baz') );
 
 
-my $child_file  = File::Spec->rel2abs( '.ackrc' );
-my $parent_file = File::Spec->catfile( $tempdir->dirname, 'foo', 'bar', '.ackrc' );
+my $child_file       = File::Spec->rel2abs( '.ackrc' );
+my $parent_file      = File::Spec->catfile( $tempdir->dirname, 'foo', 'bar', '.ackrc' );
+my $grandparent_file = File::Spec->catfile($tempdir->dirname, 'foo', '.ackrc');
 
 subtest 'A project file in the same directory should be detected' => sub {
     plan tests => 2;
@@ -99,7 +100,6 @@ subtest 'A project file in the parent directory should be detected' => sub {
 };
 
 
-my $grandparent_file = File::Spec->catfile($tempdir->dirname, 'foo', '.ackrc');
 subtest 'A project in the grandparent directory should be detected' => sub {
     plan tests => 2;
 
