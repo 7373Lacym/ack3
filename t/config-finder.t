@@ -73,14 +73,17 @@ _mkdir( File::Spec->catdir('foo', 'bar') );
 _mkdir( File::Spec->catdir('foo', 'bar', 'baz') );
 _chdir( File::Spec->catdir('foo', 'bar', 'baz') );
 
+
+my $child_file  = File::Spec->rel2abs( '.ackrc' );
+my $parent_file = File::Spec->catfile( $tempdir->dirname, 'foo', 'bar', '.ackrc' );
+
 subtest 'A project file in the same directory should be detected' => sub {
     plan tests => 2;
 
     touch_ackrc( '.ackrc' );
 
-    my $path = File::Spec->rel2abs( '.ackrc' );
-    with_home( sub { expect_ackrcs( [ @std_files,    { project => 1, path => $path } ] ) } );
-    no_home(   sub { expect_ackrcs( [ @global_files, { project => 1, path => $path } ] ) } );
+    with_home( sub { expect_ackrcs( [ @std_files,    { project => 1, path => $child_file } ] ) } );
+    no_home(   sub { expect_ackrcs( [ @global_files, { project => 1, path => $child_file } ] ) } );
 
     _unlink( '.ackrc' );
 };
@@ -89,21 +92,20 @@ subtest 'A project file in the same directory should be detected' => sub {
 subtest 'A project file in the parent directory should be detected' => sub {
     plan tests => 2;
 
-    my $project_file = File::Spec->catfile($tempdir->dirname, 'foo', 'bar', '.ackrc');
-    touch_ackrc( $project_file );
-    with_home( sub { expect_ackrcs( [ @std_files,    { project => 1, path => $project_file } ] ) } );
-    no_home(   sub { expect_ackrcs( [ @global_files, { project => 1, path => $project_file } ] ) } );
-    _unlink( $project_file );
+    touch_ackrc( $parent_file );
+    with_home( sub { expect_ackrcs( [ @std_files,    { project => 1, path => $parent_file } ] ) } );
+    no_home(   sub { expect_ackrcs( [ @global_files, { project => 1, path => $parent_file } ] ) } );
+    _unlink( $parent_file );
 };
 
 
-my $project_file = File::Spec->catfile($tempdir->dirname, 'foo', '.ackrc');
+my $grandparent_file = File::Spec->catfile($tempdir->dirname, 'foo', '.ackrc');
 subtest 'A project in the grandparent directory should be detected' => sub {
     plan tests => 2;
 
-    touch_ackrc( $project_file );
-    with_home( sub { expect_ackrcs( [ @std_files,    { project => 1, path => $project_file } ] ) } );
-    no_home(   sub { expect_ackrcs( [ @global_files, { project => 1, path => $project_file } ] ) } );
+    touch_ackrc( $grandparent_file );
+    with_home( sub { expect_ackrcs( [ @std_files,    { project => 1, path => $grandparent_file } ] ) } );
+    no_home(   sub { expect_ackrcs( [ @global_files, { project => 1, path => $grandparent_file } ] ) } );
 };
 
 
@@ -117,7 +119,7 @@ subtest 'A project file in the same directory should be detected, even with anot
     no_home(   sub { expect_ackrcs( [ @global_files, { project => 1, path => $currdir_ackrc } ] ) } );
 
     _unlink( '.ackrc' );
-    _unlink( $project_file );
+    _unlink( $grandparent_file );
 };
 
 
@@ -133,7 +135,7 @@ subtest 'A project file in the same directory should be detected' => sub {
 };
 
 
-$project_file = File::Spec->catfile($tempdir->dirname, 'foo', '_ackrc');
+my $project_file = File::Spec->catfile($tempdir->dirname, 'foo', '_ackrc');
 subtest 'A project file in the grandparent directory should be detected' => sub {
     plan tests => 2;
 
